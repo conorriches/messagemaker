@@ -1,0 +1,133 @@
+<html>
+  <body>
+    <h1>Messagemaker LED frame generator</h1>
+
+    <h3>1. Upload image</h3>
+    <input type="file" id="input" />
+    <br />
+    <h3>2. Visualisation</h3>
+    <div id="container"></div>
+    <br />
+    <h3>3. Text Output</h3>
+    <textarea id="output" cols="128" rows="32"></textarea>
+
+    <script>
+      const _URL = window.URL || window.webkitURL;
+      const inputElement = document.getElementById("input");
+      inputElement.addEventListener("change", process, false);
+
+      function process() {
+        const file = this.files[0];
+        let output = "0200\r\n";
+        img = new Image();
+        var objectUrl = _URL.createObjectURL(file);
+        img.onload = function () {
+          var canvas = document.createElement("canvas");
+          let container = document.querySelector("#container");
+
+          canvas.width = this.width;
+          canvas.height = this.height;
+          canvas
+            .getContext("2d")
+            .drawImage(this, 0, 0, this.width, this.height);
+
+          for (let y = 0; y < 32; y++) {
+            for (let x = 0; x < 128; x++) {
+              // visual pixel
+              let pixel = document.createElement("div");
+              pixel.classList.add("pixel");
+
+              // actual pixel
+              var pixelData = canvas
+                .getContext("2d")
+                .getImageData(x, y, 1, 1).data;
+
+              let colour = processPixel(pixelData);
+              output += colour;
+              if ((x + 1) % 128 === 0) {
+                console.log(x);
+                output += "\r\n";
+              }
+
+              // set visual pixel colour
+              pixel.dataset.colour = colour;
+              container.appendChild(pixel);
+            }
+          }
+
+          document.getElementById("output").value = output;
+
+          _URL.revokeObjectURL(objectUrl);
+        };
+        img.src = objectUrl;
+      }
+
+      function processPixel(pixel) {
+        let r = pixel[0];
+        let g = pixel[1];
+        let b = pixel[2];
+
+        if (b > 100) return 0;
+        if (r > 100) {
+          if (g > 100) {
+            return 3;
+          }
+          return 2;
+        } else if (g > 100) {
+          return 1;
+        }
+
+        return 0;
+      }
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Asap&family=Rubik:wght@300;400;500;700;800&display=swap");
+
+      body {
+        background: #eee;
+        font-family: "Asap";
+      }
+
+      h1 {
+        background: #fff;
+        border-bottom: 2px solid red;
+        padding: 1em;
+      }
+
+      h3 {
+        background: #fff;
+        border-bottom: 2px solid green;
+        padding: 0.5em;
+      }
+
+      #container {
+        display: grid;
+        grid-gap: 0em;
+        grid-template-rows: repeat(32, 1fr);
+        grid-template-columns: repeat(128, 1fr);
+        border-right: 1px solid black;
+        border-bottom: 1px solid black;
+        width: 1280px;
+      }
+
+      .pixel {
+        border-left: 1px solid black;
+        border-top: 1px solid black;
+        height: 10px;
+      }
+
+      .pixel[data-colour="0"] {
+        background: #333;
+      }
+      .pixel[data-colour="1"] {
+        background: #0a0;
+      }
+      .pixel[data-colour="2"] {
+        background: #d00;
+      }
+      .pixel[data-colour="3"] {
+        background: #f50;
+      }
+    </style>
+  </body>
+</html>
