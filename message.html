@@ -5,25 +5,26 @@
     <h3>1. Upload image</h3>
     <input type="file" id="input" />
     <br />
-    <h3>2. Visualisation</h3>
+    <h3>2. Text Output</h3>
+    <textarea id="output" cols="128" rows="32" ></textarea>
+    <h3>3. Visualisation</h3>
     <div id="container"></div>
     <br />
-    <h3>3. Text Output</h3>
-    <textarea id="output" cols="128" rows="32"></textarea>
 
     <script>
       const _URL = window.URL || window.webkitURL;
       const inputElement = document.getElementById("input");
+      const output = document.getElementById("output");
       inputElement.addEventListener("change", process, false);
+      output.addEventListener("input", visualise);
 
       function process() {
         const file = this.files[0];
-        let output = "0200\r\n";
+        let output = "xxxxx\r\n";
         img = new Image();
-        var objectUrl = _URL.createObjectURL(file);
+        let objectUrl = _URL.createObjectURL(file);
         img.onload = function () {
           var canvas = document.createElement("canvas");
-          let container = document.querySelector("#container");
 
           canvas.width = this.width;
           canvas.height = this.height;
@@ -33,9 +34,7 @@
 
           for (let y = 0; y < 32; y++) {
             for (let x = 0; x < 128; x++) {
-              // visual pixel
-              let pixel = document.createElement("div");
-              pixel.classList.add("pixel");
+              
 
               // actual pixel
               var pixelData = canvas
@@ -49,17 +48,43 @@
                 output += "\r\n";
               }
 
-              // set visual pixel colour
-              pixel.dataset.colour = colour;
-              container.appendChild(pixel);
+
             }
           }
 
           document.getElementById("output").value = output;
+          visualise();
 
           _URL.revokeObjectURL(objectUrl);
         };
         img.src = objectUrl;
+      }
+
+      function visualise() {
+        let text = document.getElementById("output").value;
+        const container = document.getElementById("container");
+        
+        // visualise pixelgrid
+        container.innerHTML="";
+        const rowLength = 128;
+        const rows = 32;
+        const totalPx = rowLength * rows + 32 + 6;
+
+        console.log("total", text.length)
+
+
+        for(let i = 0 ; i < text.length ; i++){
+
+
+          if(!isNaN(parseInt(text[i]))){
+            // visual pixel
+            let pixel = document.createElement("div");
+            pixel.classList.add("pixel");
+            // set visual pixel colour
+            pixel.dataset.colour = text[i];
+            container.appendChild(pixel);
+          }
+        }
       }
 
       function processPixel(pixel) {
@@ -128,6 +153,7 @@
       .pixel[data-colour="3"] {
         background: #f50;
       }
+
     </style>
   </body>
 </html>
